@@ -17,9 +17,9 @@ source("auxiliarfunctions-BR-GAPLM.R")
 ####################################################################################
 
 
-Q<-function(param,v,y,N,X,gamm,D,B,lamb,lig){
+Q1<-function(param,v,y,E,X,gamm,D,B,lamb,lig){
   p=ncol(X)
-  s=ncol(N)
+  s=ncol(E)
   bet=param[1:p]
   kapp=param[(1+p):(s+p)]
   alpha=param[s+p+1]
@@ -36,22 +36,22 @@ Q<-function(param,v,y,N,X,gamm,D,B,lamb,lig){
     mu<- exp(-exp(-eta1))
   } else {print('Link function not defined')
   } 
-  eta2=N%*%kapp
+  eta2=E%*%kapp
   phi=exp(eta2)
   epi<-1-sqrt(1-4*alpha*mu*(1-mu))
   delta<- (mu-0.5*epi)/(1-epi)
   a=delta*phi
   b=(1-delta)*phi
   Dlamb=lamb*D
-  Q=sum(v*log(epi)+(1-v)*log(1-epi)+(1-v)*dbeta(y,a,b,log=TRUE))-
+  Q1=sum(v*log(epi)+(1-v)*log(1-epi)+(1-v)*dbeta(y,a,b,log=TRUE))-
     0.5*t(gamm)%*%Dlamb%*%gamm
-  return(-Q)
+  return(-Q1)
 }
 
 
-Q2<-function(gamm,v,y,N,X,param,D,B,lamb,lig){
+Q2<-function(gamm,v,y,E,X,param,D,B,lamb,lig){
   p=ncol(X)
-  s=ncol(N)
+  s=ncol(E)
   bet=param[1:p]
   kapp=param[(1+p):(s+p)]
   alpha=param[s+p+1]
@@ -68,21 +68,21 @@ Q2<-function(gamm,v,y,N,X,param,D,B,lamb,lig){
     mu<- exp(-exp(-eta1))
   } else {print('Link function not defined')
   } 
-  eta2=N%*%kapp
+  eta2=E%*%kapp
   phi=exp(eta2)
   epi<-1-sqrt(1-4*alpha*mu*(1-mu))
   delta<- (mu-0.5*epi)/(1-epi)
   a=delta*phi
   b=(1-delta)*phi
   Dlamb=lamb*D
-  Q=sum(v*log(epi)+(1-v)*log(1-epi)+(1-v)*dbeta(y,a,b,log=TRUE))-
+  Q1=sum(v*log(epi)+(1-v)*log(1-epi)+(1-v)*dbeta(y,a,b,log=TRUE))-
     0.5*t(gamm)%*%Dlamb%*%gamm
-  return(-Q)
+  return(-Q1)
 }
 
 
-Qb<-function(param,v,y,N,X,gamm,D,B,lamb,lig){
-  s=ncol(N)
+Qb<-function(param,v,y,E,X,gamm,D,B,lamb,lig){
+  s=ncol(E)
   kapp=param[1:s]
   alpha=param[s+1]
   eta1=B%*%gamm
@@ -98,21 +98,21 @@ Qb<-function(param,v,y,N,X,gamm,D,B,lamb,lig){
     mu<- exp(-exp(-eta1))
   } else {print('Link function not defined')
   } 
-  eta2=N%*%kapp
+  eta2=E%*%kapp
   phi=exp(eta2)
   epi<-1-sqrt(1-4*alpha*mu*(1-mu))
   delta<- (mu-0.5*epi)/(1-epi)
   a=delta*phi
   b=(1-delta)*phi
   Dlamb=lamb*D
-  Q=sum(v*log(epi)+(1-v)*log(1-epi)+(1-v)*dbeta(y,a,b,log=TRUE))-
+  Q1=sum(v*log(epi)+(1-v)*log(1-epi)+(1-v)*dbeta(y,a,b,log=TRUE))-
     0.5*t(gamm)%*%Dlamb%*%gamm
-  return(-Q)
+  return(-Q1)
 }
 
 
-Q2b<-function(gamm,v,y,N,X,param,D,B,lamb,lig){
-  s=ncol(N)
+Q2b<-function(gamm,v,y,E,X,param,D,B,lamb,lig){
+  s=ncol(E)
   kapp=param[1:s]
   alpha=param[s+1]
   eta1=B%*%gamm
@@ -128,16 +128,16 @@ Q2b<-function(gamm,v,y,N,X,param,D,B,lamb,lig){
     mu<- exp(-exp(-eta1))
   } else {print('Link function not defined')
   } 
-  eta2=N%*%kapp
+  eta2=E%*%kapp
   phi=exp(eta2)
   epi<-1-sqrt(1-4*alpha*mu*(1-mu))
   delta<- (mu-0.5*epi)/(1-epi)
   a=delta*phi
   b=(1-delta)*phi
   Dlamb=lamb*D
-  Q=sum(v*log(epi)+(1-v)*log(1-epi)+(1-v)*dbeta(y,a,b,log=TRUE))-
+  Q1=sum(v*log(epi)+(1-v)*log(1-epi)+(1-v)*dbeta(y,a,b,log=TRUE))-
     0.5*t(gamm)%*%Dlamb%*%gamm
-  return(-Q)
+  return(-Q1)
 }
 
 ### Function to fit the BR-GAPLM
@@ -156,7 +156,7 @@ brgaplm<-function(formula.mu=formula,formula.phi=~1,data=NULL,mu.link,
   Z <- as.matrix(mu.X[,aux])
   y <- if(is.null(data)){ model.frame(mcall)[,1] 
   }else model.frame(mcall, data = data)[,1]
-  N <- if(is.null(data)){ model.matrix(formula.phi)
+  E <- if(is.null(data)){ model.matrix(formula.phi)
   }else model.matrix(formula.phi, data = data)  
   
   if(is.null(data)){
@@ -165,9 +165,9 @@ brgaplm<-function(formula.mu=formula,formula.phi=~1,data=NULL,mu.link,
   
   
   if(ncol(X)==0){
-    s<-ncol(N)
+    s<-ncol(E)
     nq<-ncol(Z)
-    ntol<-nrow(N)
+    ntol<-nrow(E)
     
     Bs<-list(NULL)
     Ds<-list(NULL)
@@ -199,7 +199,7 @@ brgaplm<-function(formula.mu=formula,formula.phi=~1,data=NULL,mu.link,
     
     #Valores iniciais
     gamm<-ginv(t(B)%*%B+lamb*D)%*%t(B)%*%y
-    kapp<-solve(t(N)%*%N)%*%t(N)%*%y
+    kapp<-solve(t(E)%*%E)%*%t(E)%*%y
     alpha<-(2*sum(y^2))/(sum(y^2)+ntol)
     par0 <- c(kapp,alpha)
     
@@ -211,7 +211,7 @@ brgaplm<-function(formula.mu=formula,formula.phi=~1,data=NULL,mu.link,
       i=i+1
       
       eta1<-B%*%gamm
-      eta2<-N%*%kapp
+      eta2<-E%*%kapp
       phi<-exp(eta2)
       if(mu.link=='logit'){
         mu<- logitlink(eta1, inverse = TRUE)
@@ -235,12 +235,12 @@ brgaplm<-function(formula.mu=formula,formula.phi=~1,data=NULL,mu.link,
       
       ##Passo M
       gammnew=optim(gamm, Q2b, method = "L-BFGS-B", v = v, y = y,lig=mu.link, 
-                    N = N, X = X, param = par0, D = D, B = B,lamb = lamb,
+                    E = E, X = X, param = par0, D = D, B = B,lamb = lamb,
                     lower=c(rep(-Inf,sum(qj))), 
                     upper=c(rep(Inf,sum(qj))))$par
       gamm=gammnew
       resu1=nlminb(par0, Qb, v = v, y = y, lig=mu.link,
-                   N = N, X = X, gamm = gamm, D = D, B = B,lamb = lamb,
+                   E = E, X = X, gamm = gamm, D = D, B = B,lamb = lamb,
                    lower=c(rep(-Inf,s),0.001), 
                    upper=c(rep(Inf,s),0.999))
       resu=resu1$par
@@ -252,7 +252,7 @@ brgaplm<-function(formula.mu=formula,formula.phi=~1,data=NULL,mu.link,
       if(is.null(lambda)){
         statuslam=1
       }else{statuslam=0}
-      quant=estlambdab(lambda=lamb,y=y,X=X,N=N,Ds=Ds,D=D,Bs=Bs,B=B,
+      quant=estlambdab(lambda=lamb,y=y,X=X,E=E,Ds=Ds,D=D,Bs=Bs,B=B,
                        qj=qj,gamm=gamm,kapp=kapp,alpha=alpha,
                        method=method,k=k,c=c,statuslam=statuslam,
                        lig=mu.link)
@@ -271,11 +271,11 @@ brgaplm<-function(formula.mu=formula,formula.phi=~1,data=NULL,mu.link,
       }
       
     }
-    quant1=estlambdab(lamb,y,X,N,Ds,D,Bs,B,qj,gamm,kapp,alpha,
+    quant1=estlambdab(lamb,y,X,E,Ds,D,Bs,B,qj,gamm,kapp,alpha,
                       method=method,k=k,c=c,statuslam=0,lig=mu.link)
     
     mu.lp<-B%*%gamm
-    phi.lp<-N%*%kapp
+    phi.lp<-E%*%kapp
     phi.fv<-exp(phi.lp)
     if(mu.link=='logit'){
       mu.fv<- logitlink(mu.lp, inverse = TRUE)
@@ -292,7 +292,7 @@ brgaplm<-function(formula.mu=formula,formula.phi=~1,data=NULL,mu.link,
   }else{
     
     p<-ncol(X)
-    s<-ncol(N)
+    s<-ncol(E)
     nq<-ncol(Z)
     ntol<-nrow(X)
     
@@ -328,7 +328,7 @@ brgaplm<-function(formula.mu=formula,formula.phi=~1,data=NULL,mu.link,
     ## Initial values
     bet<-solve(t(X)%*%X)%*%t(X)%*%y
     gamm<-ginv(t(B)%*%B+lamb*D)%*%t(B)%*%(y-X%*%bet)
-    kapp<-solve(t(N)%*%N)%*%t(N)%*%y
+    kapp<-solve(t(E)%*%E)%*%t(E)%*%y
     alpha<-(2*sum(y^2))/(sum(y^2)+ntol)
     par0 <- c(bet,kapp,alpha)
     
@@ -339,7 +339,7 @@ brgaplm<-function(formula.mu=formula,formula.phi=~1,data=NULL,mu.link,
       i=i+1
       
       eta1<-X%*%bet+B%*%gamm
-      eta2<-N%*%kapp
+      eta2<-E%*%kapp
       phi<-exp(eta2)
       if(mu.link=='logit'){
         mu<- logitlink(eta1, inverse = TRUE)
@@ -363,12 +363,12 @@ brgaplm<-function(formula.mu=formula,formula.phi=~1,data=NULL,mu.link,
       
       ##Passo M
       gammnew=optim(gamm, Q2, method = "L-BFGS-B", v = v, y = y,lig=mu.link, 
-                    N = N, X = X, param = par0, D = D, B = B,lamb = lamb,
+                    E = E, X = X, param = par0, D = D, B = B,lamb = lamb,
                     lower=c(rep(-Inf,sum(qj))), 
                     upper=c(rep(Inf,sum(qj))))$par
       gamm=gammnew
-      resu1=nlminb(par0, Q, v = v, y = y, lig=mu.link,
-                   N = N, X = X, gamm = gamm, D = D, B = B,lamb = lamb,
+      resu1=nlminb(par0, Q1, v = v, y = y, lig=mu.link,
+                   E = E, X = X, gamm = gamm, D = D, B = B,lamb = lamb,
                    lower=c(rep(-Inf,s+p),0.001), 
                    upper=c(rep(Inf,s+p),0.999))
       resu=resu1$par
@@ -381,7 +381,7 @@ brgaplm<-function(formula.mu=formula,formula.phi=~1,data=NULL,mu.link,
       if(is.null(lambda)){
         statuslam=1
       }else{statuslam=0}
-      quant=estlambda(lambda=lamb,y=y,X=X,N=N,Ds=Ds,D=D,Bs=Bs,B=B,
+      quant=estlambda(lambda=lamb,y=y,X=X,E=E,Ds=Ds,D=D,Bs=Bs,B=B,
                       qj=qj,bet=bet,gamm=gamm,kapp=kapp,alpha=alpha,
                       method=method,k=k,c=c,statuslam=statuslam,
                       lig=mu.link,liminf=liminf)
@@ -401,12 +401,12 @@ brgaplm<-function(formula.mu=formula,formula.phi=~1,data=NULL,mu.link,
       }
       
     }
-    quant1=estlambda(lamb,y,X,N,Ds,D,Bs,B,qj,bet,gamm,kapp,alpha,
+    quant1=estlambda(lamb,y,X,E,Ds,D,Bs,B,qj,bet,gamm,kapp,alpha,
                      method=method,k=k,c=c,statuslam=0,lig=mu.link,
                      liminf=liminf)
     
     mu.lp<-X%*%bet+B%*%gamm
-    phi.lp<-N%*%kapp
+    phi.lp<-E%*%kapp
     phi.fv<-exp(phi.lp)
     if(mu.link=='logit'){
       mu.fv<- logitlink(mu.lp, inverse = TRUE)
@@ -461,7 +461,7 @@ brgaplm<-function(formula.mu=formula,formula.phi=~1,data=NULL,mu.link,
               mu.link=mu.link,phi.link="log",
               ntol=ntol,mu.formula=formula.mu,
               phi.formula=formula.phi,
-              mu.x=X,phi.x=N,data=data,
+              mu.x=X,phi.x=E,data=data,
               y=y,mu.coefSmo=mu.coefSmo,
               mu.lp=mu.lp,phi.lp=phi.lp,
               aic=quant1$aic,
@@ -547,7 +547,7 @@ stderror=function(mod,conf=0.95){
 
 B=mod$mu.coefSmo[[1]]$B
 X=mod$mu.x
-N=mod$phi.x
+E=mod$phi.x
 nq=ncol(mod$mu.s)
 y=mod$y
 qj=lambda=0
@@ -588,7 +588,7 @@ for(i in 1:length(epi)){
           ((1-v[i])*(1-alpha)*(phi[i]/(1-epi[i])^3)*ystar[i]))*gmu(mod)$dmu[i]*X[i,]
   
   skap=-(1-v[i])*(mu[i]*ystar[i]+log(1-y[i])-digamma(b[i])+
-                    digamma(phi[i]))*gphi(mod)$dphi[i]*N[i,]
+                    digamma(phi[i]))*gphi(mod)$dphi[i]*E[i,]
   
   salp=((2*mu[i]*(1-mu[i])/(1-epi[i]))*((v[i]/epi[i])-(1-v[i])/(1-epi[i])))-
     ((phi[i]*mu[i]*(1-mu[i])*(1-2*mu[i]))/((1-epi[i])^3))*ystar[i]
@@ -635,7 +635,7 @@ influence = function(mod){
 ## Hessian
 B=mod$mu.coefSmo[[1]]$B
 X=mod$mu.x
-N=mod$phi.x
+E=mod$phi.x
 nq=ncol(mod$mu.s)
 y=mod$y
 qj=lambda=0
@@ -676,7 +676,7 @@ f5=(-(4*alpha)/(1-epi)+(4*alpha^2*(1-2*mu)^2)/((1-epi)^3))
 f6=(((1-alpha)*phi^2)/((1-epi)^6))*(trigamma(a)+trigamma(b))
 f7=((6*alpha*phi*(1-2*mu))/((1-epi)^5))*(log(y)-log(1-y)-
                       digamma(a)+digamma(b))
-R=diag(as.vector(f3*f4+f2*f5+(1-alpha)*(1-v)*(-f6+f7)*gmu(mod)$dmu^2-
+Q=diag(as.vector(f3*f4+f2*f5+(1-alpha)*(1-v)*(-f6+f7)*gmu(mod)$dmu^2-
                       ff*gmu(mod)$dmu^3*gmu(mod)$d2mu2),n)
 pp=(1-v)*(delta*(log(y)-log(1-y)-digamma(a)+digamma(b))+log(1-y)-
                       digamma(b)+digamma(phi))
@@ -693,7 +693,7 @@ f10=(phi*(1-2*mu))/(1-epi)
 J1=f8*(f4+f2*(1/(1-epi)))-(1-v)*f9*(f10*(trigamma(a)+trigamma(b))+
                       6*(log(y)-log(1-y)-digamma(a)+digamma(b)))
 J=sum(J1)
-C=diag(as.vector( -(1-v)*(((1-alpha)/((1-epi)^3))*(phi*delta*(trigamma(a)+
+Qstar=diag(as.vector( -(1-v)*(((1-alpha)/((1-epi)^3))*(phi*delta*(trigamma(a)+
                       trigamma(b))-phi*trigamma(b)-
                       (log(y)-log(1-y)-digamma(a)+digamma(b))))*gphi(mod)$dphi*gmu(mod)$dmu),n)
 ff3=(4*alpha*mu*(1-mu)*(1-2*mu))/((1-epi)^2)
@@ -705,14 +705,14 @@ cstar=(1-v)*(((mu*(1-mu)*(1-2*mu))/(1-epi)^3)*(phi*delta*(trigamma(a)+
                             trigamma(b))-phi*trigamma(b)-(log(y)-
                             log(1-y)-digamma(a)+digamma(b))))
 
-Ubb=t(X)%*%R%*%X
-Ukk=t(N)%*%S%*%N
-Ugg=t(B)%*%R%*%B-D
+Ubb=t(X)%*%Q%*%X
+Ukk=t(E)%*%S%*%E
+Ugg=t(B)%*%Q%*%B-D
 Uaa=J
-Ubk=-t(X)%*%C%*%N
-Ugk=-t(B)%*%C%*%N
-Ubg=t(X)%*%R%*%B
-Uka=-t(N)%*%T2%*%cstar
+Ubk=-t(X)%*%Qstar%*%E
+Ugk=-t(B)%*%Qstar%*%E
+Ubg=t(X)%*%Q%*%B
+Uka=-t(E)%*%T2%*%cstar
 Uba=t(X)%*%T1%*%sstar
 Uga=t(B)%*%T1%*%sstar
 Utt=rbind(cbind(Ubb,Ubg,Ubk,Uba),cbind(t(Ubg),Ugg,Ugk,Uga),
@@ -723,7 +723,7 @@ M=diag(as.vector((1-v)*(1-alpha)*phi/(1-epi)^3*(mod$y*(1-mod$y))^(-1)),n)
 L=diag(as.vector((1-v)*(delta-mod$y)/(mod$y*(1-mod$y))),n)
 h=-((1-v)*(phi*mu*(1-mu)*(1-2*mu))/(1-epi)^3)*(mod$y*(1-mod$y))^(-1)
 Dmutheta=cbind(T1%*%X,T1%*%B,matrix(0,nrow=n,ncol=(s+1)))
-Uthetay=rbind(t(X)%*%T1%*%M,t(B)%*%T1%*%M,t(N)%*%T2%*%L,t(h))
+Uthetay=rbind(t(X)%*%T1%*%M,t(B)%*%T1%*%M,t(E)%*%T2%*%L,t(h))
 Uttinv=ginv(as.matrix(-Utt))
 lev=Dmutheta%*%Uttinv%*%Uthetay
 
@@ -732,7 +732,7 @@ cook=Uti=beti=kappi=gammi=0
 for(i in 1:n){
   beti=bet+solve(-Ubb)%*%t(X[-i,])%*%T1[-i,-i]%*%ff[-i]
   gammi=gamm+ginv(as.matrix(-Ugg))%*%t(B[-i,])%*%T1[-i,-i]%*%ff[-i]-D%*%gamm
-  kappi=kapp+solve(-Ukk)%*%t(N[-i,])%*%T2[-i,-i]%*%pp[-i]
+  kappi=kapp+solve(-Ukk)%*%t(E[-i,])%*%T2[-i,-i]%*%pp[-i]
   alphai=alpha+(-Uaa)^(-1)*sum(d1[-i])
   cook[i]=t(rbind(beti,gammi,kappi,alphai)-as.matrix(c(bet,gamm,kapp,alpha)))%*%
     (-Utt)%*%(rbind(beti,gammi,kappi,alphai)-as.matrix(c(bet,gamm,kapp,alpha)))
@@ -741,7 +741,7 @@ for(i in 1:n){
 ## Local influence - Case-weight perturbation
 deltabc=t(X)%*%T1%*%diag(as.vector(ff),n)
 deltagc=t(B)%*%T1%*%diag(as.vector(ff),n)
-deltakc=t(N)%*%T2%*%diag(as.vector(pp),n)
+deltakc=t(E)%*%T2%*%diag(as.vector(pp),n)
 deltaac=t(d1)
 deltacases=rbind(deltabc,deltagc,deltakc,deltaac)
 Zc=t(deltacases)%*%Uttinv%*%deltacases
@@ -751,7 +751,7 @@ Cmaxc=abs(eigen(Zc)$vectors[,1])
 ## Local influence - Response perturbation
 deltaby=t(X)%*%T1%*%M
 deltagy=t(B)%*%T1%*%M
-deltaky=t(N)%*%T2%*%L
+deltaky=t(E)%*%T2%*%L
 deltaay=t(h)
 deltay=rbind(deltaby,deltagy,deltaky,deltaay)
 Zy=t(deltay)%*%Uttinv%*%deltay
