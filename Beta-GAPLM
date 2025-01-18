@@ -38,7 +38,8 @@ pBET<- function(q, mu=0.5, sigma=1, lower.tail = TRUE, log.p = FALSE){
   if(any(sigma <= 0)) stop(paste("sigma must be positive","\n",""))
   if(any(mu <= 0)|any(mu >= 1)) stop(paste("mu must be between 0 and 1","\n",""))
   if (any(q <= 0) | any(q >= 1)) stop(paste("y must be between 0 and 1", "\n",""))
-  cdf<-pbeta(q,shape1=mu*sigma, shape2=(1-mu)*sigma,ncp=0, lower.tail = lower.tail, log.p = log.p)
+  cdf<-pbeta(q,shape1=mu*sigma, shape2=(1-mu)*sigma,ncp=0, lower.tail = lower.tail, 
+                   log.p = log.p)
   cdf
 }
 
@@ -46,7 +47,8 @@ qBET<-function(p, mu=0.5, sigma=1, lower.tail = TRUE, log.p = FALSE){
   if(any(sigma <= 0)) stop(paste("sigma must be positive","\n",""))
   if(any(mu <= 0)|any(mu >= 1)) stop(paste("mu must be between 0 and 1","\n",""))
   if(any(p <= 0)|any(p >= 1)) stop(paste("p must be between 0 and 1","\n",""))
-  q<-qbeta(p,shape1=mu*sigma, shape2=(1-mu)*sigma,ncp=0, lower.tail = lower.tail, log.p = log.p)
+  q<-qbeta(p,shape1=mu*sigma, shape2=(1-mu)*sigma,ncp=0, lower.tail = lower.tail, 
+                        log.p = log.p)
   q
 }
 
@@ -287,7 +289,7 @@ if(is.null(mod$mu.s)==FALSE){
   X=mod$mu.x}
 
 kapp=matrix(mod$sigma.coefficients,nrow=s)
-N=mod$sigma.x
+E=mod$sigma.x
 
 T1=diag(gmu(mod)$dmu,n)
 T2=diag(gphi(mod)$dphi,n)
@@ -299,10 +301,10 @@ Wstar=diag((phi*trigamma(mu*phi)*mu-phi*trigamma((1-mu)*phi)*
 
 
 Kbb= t(X)%*%W%*%X
-Kkk= t(N)%*%Pstar%*%N
+Kkk= t(E)%*%Pstar%*%E
 Kgg= t(B)%*%W%*%B+D
-Kbk= t(X)%*%Wstar%*%N
-Kgk= t(N)%*%Wstar%*%B
+Kbk= t(X)%*%Wstar%*%E
+Kgk= t(E)%*%Wstar%*%B
 Kbg= t(X)%*%W%*%B
 Kggl=t(B)%*%W%*%B
 Ktt=rbind(cbind(Kbb,Kbk,Kbg),cbind(t(Kbk),Kkk,Kgk),cbind(t(Kbg),t(Kgk),Kgg))
@@ -382,7 +384,7 @@ if(is.null(mod$mu.s)==FALSE){
   X=mod$mu.x}
 
 kapp=matrix(mod$sigma.coefficients,nrow=s)
-N=mod$sigma.x
+E=mod$sigma.x
 
 T1=diag(gmu(mod)$dmu,n)
 T2=diag(gphi(mod)$dphi,n)
@@ -390,7 +392,7 @@ Phi=diag(mod$sigma.fv,n)
 
 phi=mod$sigma.fv
 mu=mod$mu.fv
-Q=Qstar=R=diag(0,n)
+Q=Qstar=S=diag(0,n)
 ystar=mustar=u=0
 for(i in 1:n){
   ystar[i]=log(mod$y[i]/(1-mod$y[i]))
@@ -400,14 +402,14 @@ for(i in 1:n){
                      mustar[i])*gmu(mod)$dmu[i]*gmu(mod)$d2mu2[i])*gmu(mod)$dmu[i]^2
   Qstar[i,i]=(phi[i]*(trigamma(mu[i]*phi[i])*mu[i]-trigamma((1-mu[i])*phi[i])*(1-mu[i]))-
                      (ystar[i]-mustar[i]))*gmu(mod)$dmu[i]*gphi(mod)$dphi[i]
-  R[i,i]=(trigamma(mu[i]*phi[i])*mu[i]^2+trigamma((1-mu[i])*phi[i])*(1-mu[i])^2- trigamma(phi[i])+
+  S[i,i]=(trigamma(mu[i]*phi[i])*mu[i]^2+trigamma((1-mu[i])*phi[i])*(1-mu[i])^2- trigamma(phi[i])+
                    u[i]*gphi(mod)$dphi[i]*gphi(mod)$d2phi2[i])*gphi(mod)$dphi[i]^2  
 }
 Ubb=-t(X)%*%Q%*%X
-Ukk=-t(N)%*%R%*%N
+Ukk=-t(E)%*%S%*%E
 Ugg=-t(B)%*%Q%*%B-D
-Ubk=-t(X)%*%Qstar%*%N
-Ugk=-t(B)%*%Qstar%*%N
+Ubk=-t(X)%*%Qstar%*%E
+Ugk=-t(B)%*%Qstar%*%E
 Ubg=-t(X)%*%Q%*%B
 Utt=rbind(cbind(Ubb,Ubg,Ubk),cbind(t(Ubg),Ugg,Ugk),cbind(t(Ubk),t(Ugk),Ukk))
 Uttinv=ginv(as.matrix(-Utt))
@@ -424,11 +426,11 @@ for(i in 1:n){
 }
 if(is.null(mod$mu.s)==FALSE){
   Dmutheta=cbind(T1%*%X,T1%*%B,matrix(0,nrow=n,ncol=s))
-  Uthetay=rbind(t(X)%*%T1%*%Phi%*%M,t(B)%*%T1%*%Phi%*%M,t(N)%*%T2%*%Bstar)
+  Uthetay=rbind(t(X)%*%T1%*%Phi%*%M,t(B)%*%T1%*%Phi%*%M,t(E)%*%T2%*%Bstar)
   lev=Dmutheta%*%Uttinv%*%Uthetay
 }else{
   Dmutheta=cbind(T1%*%X,matrix(0,nrow=n,ncol=s))
-  Uthetay=rbind(t(X)%*%T1%*%Phi%*%M,t(N)%*%T2%*%Bstar)
+  Uthetay=rbind(t(X)%*%T1%*%Phi%*%M,t(E)%*%T2%*%Bstar)
   Uttinv=solve(as.matrix(Utt))
   lev=Dmutheta%*%Uttinv%*%Uthetay
 }
@@ -438,7 +440,7 @@ cook=Uti=beti=kappi=gammi=0
 for(i in 1:n){
   beti=bet+solve(-Ubb)%*%t(X[-i,])%*%T1[-i,-i]%*%Phi[-i,-i]%*%(ystar[-i]-mustar[-i])
   gammi=gamm+ginv(as.matrix(-Ugg))%*%t(B[-i,])%*%T1[-i,-i]%*%Phi[-i,-i]%*%(ystar[-i]-mustar[-i])-D%*%gamm
-  kappi=kapp+solve(-Ukk)%*%t(N[-i,])%*%T2[-i,-i]%*%u[-i]
+  kappi=kapp+solve(-Ukk)%*%t(E[-i,])%*%T2[-i,-i]%*%u[-i]
   cook[i]=t(rbind(beti,gammi,kappi)-rbind(bet,gamm,kapp))%*%Uttinv%*%(rbind(beti,gammi,kappi)-rbind(bet,gamm,kapp))
 }
 
@@ -446,7 +448,7 @@ for(i in 1:n){
 ## Local influence - Case-weight perturbation
 deltabc=t(X)%*%T1%*%Phi%*%diag((ystar-mustar),n)
 deltagc=t(B)%*%T1%*%Phi%*%diag((ystar-mustar),n)
-deltakc=t(N)%*%T2%*%diag(u,n)
+deltakc=t(E)%*%T2%*%diag(u,n)
 deltacasos=rbind(deltabc,deltagc,deltakc)
 Zc=t(deltacasos)%*%Uttinv%*%deltacasos
 Cmaxc=abs(eigen(Zc)$vectors[,1])
@@ -455,7 +457,7 @@ Cmaxc=abs(eigen(Zc)$vectors[,1])
 ## Local influence - Response perturbation
 deltaby=t(X)%*%T1%*%Phi%*%M
 deltagy=t(B)%*%T1%*%Phi%*%M
-deltaky=t(N)%*%T2%*%Bstar
+deltaky=t(E)%*%T2%*%Bstar
 deltay=rbind(deltaby,deltagy,deltaky)
 Zy=t(deltay)%*%Uttinv%*%deltay
 Cmaxy=abs(eigen(Zy)$vectors[,1])
