@@ -812,7 +812,7 @@ plotcw=function(mod, ref=0.35){
   Cmaxc=influence(mod)$dmaxcw
   s1<-qplot(seq_along(Cmaxc),Cmaxc,geom = "point",
   label = seq(1,length(Cmaxc),1))+ 
-  xlab("Index") + ylab("dmax") +
+  xlab("Index") + ylab(expression(d[max])) +
   geom_text_repel(aes(label=ifelse(((Cmaxc)> ref),paste0(1:n),""))) +
   theme(
     panel.border = element_blank(),
@@ -833,7 +833,7 @@ plotrp=function(mod, ref=0.04){
   Cmaxy=influence(mod)$dmaxy
   s1<-qplot(seq_along(Cmaxy),Cmaxy,geom = "point",
   label = seq(1,length(Cmaxy),1))+ 
-  xlab("Index") + ylab("dmáx") +
+  xlab("Index") + ylab(expression(d[max])) +
   geom_text_repel(aes(label=ifelse(((Cmaxy)> ref),paste0(1:n),""))) +
   theme(
     panel.border = element_blank(),
