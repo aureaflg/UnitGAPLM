@@ -274,7 +274,7 @@ if(is.null(mod$mu.s)==FALSE){
   for (i in 1:nq){
     ajus=pb(mod$mu.x[,which(colnames(mod$mu.x) %in% colnames(mod$mu.s)[i])],
             degree=degree,order=order,
-            control=pb.control(inter=(length(mod$mu.coefSmo[[1]]$knots)-3)),
+            control=pb.control(inter=(length(mod$mu.coefSmo[[i]]$knots)-3)),
             lambda = mod$mu.lambda[i])
     Bs[[i]]=attr(ajus,"X")
     Ds[[i]]=t(attr(ajus,"D"))%*%attr(ajus,"D")*mod$mu.lambda[i]
@@ -369,7 +369,7 @@ if(is.null(mod$mu.s)==FALSE){
   for (i in 1:nq){
     ajus=pb(mod$mu.x[,which(colnames(mod$mu.x) %in% colnames(mod$mu.s)[i])],
             degree=degree,order=order,
-            control=pb.control(inter=(length(mod$mu.coefSmo[[1]]$knots)-3)),
+            control=pb.control(inter=(length(mod$mu.coefSmo[[i]]$knots)-3)),
             lambda = mod$mu.lambda[i])
     Bs[[i]]=attr(ajus,"X")
     Ds[[i]]=t(attr(ajus,"D"))%*%attr(ajus,"D")*mod$mu.lambda[i]
